@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Notifications Tester</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <main class="container">
+    <h2>Socket / Notifications Tester</h2>
+
+    <div class="center">
+      <p class="small">Provide JWT to register this client with the socket server (or leave blank to connect anonymously).</p>
+      <textarea id="token" placeholder="Paste JWT here" style="width:100%;height:80px"></textarea>
+      <button id="connectBtn">Connect Socket</button>
+      <button id="registerBtn">Register with Token</button>
+    </div>
+
+    <section>
+      <h3>Incoming notifications</h3>
+      <ul id="messages" class="tasks-list"></ul>
+    </section>
+
+    <section>
+      <h3>Send test notification</h3>
+      <input id="targetUser" placeholder="Target userId">
+      <input id="messageText" placeholder="Message">
+      <button id="sendTest">Send</button>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const messages = document.getElementById('messages');
+    let socket;
+
+    function addMsg(txt){
+      const li = document.createElement('li'); li.className='task-item'; li.textContent = txt; messages.prepend(li);
+    }
+
+    document.getElementById('connectBtn').addEventListener('click', ()=>{
+      if (socket && socket.connected) { addMsg('Already connected'); return; }
+      socket = io({ transports:['websocket'] });
+      socket.on('connect', ()=> addMsg('Connected: ' + socket.id));
+      socket.on('disconnect', ()=> addMsg('Disconnected'));
+      socket.on('notification', (n)=> addMsg('Notification: ' + JSON.stringify(n)));
+      addMsg('Connecting...');
+    });
+
+    document.getElementById('registerBtn').addEventListener('click', ()=>{
+      const token = document.getElementById('token').value.trim();
+      if (!socket || !socket.connected) { addMsg('Not connected yet'); return; }
+      socket.emit('registerUser', token);
+      addMsg('Sent registerUser');
+    });
+
+    document.getElementById('sendTest').addEventListener('click', async ()=>{
+      const userId = document.getElementById('targetUser').value.trim();
+      const message = document.getElementById('messageText').value.trim();
+      if (!userId || !message) { alert('userId and message required'); return; }
+      try{
+        const res = await fetch('/api/notifications/send-test', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ userId, message }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Error');
+        addMsg('Server sent: ' + JSON.stringify(data.note));
+      }catch(err){ addMsg('Error sending test: ' + err.message); }
+    });
+  </script>
+</body>
+</html>

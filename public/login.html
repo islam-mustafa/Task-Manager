@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>تسجيل الدخول</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    body {
+      font-family: Arial;
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #1e90ff;
+      color: white;
+      border: none;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    hr {
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>تسجيل الدخول بالبريد وكلمة المرور</h2>
+  <form id="loginForm">
+    <input type="email" id="email" placeholder="البريد الإلكتروني" required>
+    <input type="password" id="password" placeholder="كلمة المرور" required>
+    <button type="submit">تسجيل الدخول</button>
+  </form>
+
+  <hr>
+
+  <h2>أو تسجيل الدخول بواسطة جوجل</h2>
+  <div id="g_id_onload"
+       data-client_id="689443364402-2i9o7ao6b6i495h36084b9q60eiq185s.apps.googleusercontent.com"
+       data-login_uri="http://localhost:5000/api/users/google/callback"
+       data-auto_prompt="false">
+  </div>
+  <div class="g_id_signin"
+       data-type="standard"
+       data-size="large"
+       data-theme="outline"
+       data-text="sign_in_with"
+       data-shape="rectangular"
+       data-logo_alignment="left">
+  </div>
+
+  <script>
+    // تسجيل الدخول بالبريد والباسورد
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('http://localhost:5000/api/users/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.token) {
+          localStorage.setItem('token', data.token);
+          alert('تم تسجيل الدخول بنجاح');
+          // هنا ممكن تعمل redirect لصفحة المهام
+          window.location.href = '/tasks.html';
+        } else {
+          alert(data.message || 'حدث خطأ في تسجيل الدخول');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('حدث خطأ في الاتصال بالخادم');
+      }
+    });
+  </script>
+</body>
+</html>

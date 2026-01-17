@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tasks - Node Army</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h2>قائمة المهام</h2>
+      <p class="small">الصفحة محمية — سجل الدخول لعرض المهام</p>
+    </header>
+
+    <div class="center">
+      <button id="logoutBtn">تسجيل الخروج</button>
+      <form id="taskForm">
+        <input type="text" id="title" placeholder="العنوان" required>
+        <input type="text" id="description" placeholder="الوصف">
+        <button type="submit">إضافة مهمة</button>
+      </form>
+      <ul id="tasks" class="tasks-list"></ul>
+    </div>
+  </main>
+  <script src="/js/main.js"></script>
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) location.href = '/login.html';
+
+    function authHeaders(){ return { 'Authorization': 'Bearer ' + localStorage.getItem('token') } }
+
+    async function loadTasks(){
+      try{
+        const data = await UI.safeFetch('/api/tasks', { headers: authHeaders() });
+        const list = document.getElementById('tasks'); list.innerHTML='';
+        data.forEach(t=>{
+          const li = document.createElement('li'); li.className='task-item';
+          li.innerHTML = `<span>${t.title} <div class="small">${t.description||''}</div></span>`;
+          const del = document.createElement('button'); del.textContent='حذف';
+          del.onclick = async ()=>{ await UI.safeFetch('/api/tasks/'+t._id, { method:'DELETE', headers: authHeaders() }); loadTasks(); };
+          li.appendChild(del); list.appendChild(li);
+        })
+      }catch(err){ UI.showMessage(err.message||'Error loading tasks','error'); document.getElementById('tasks').textContent = err.message || 'خطأ'; }
+    }
+
+    document.getElementById('taskForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const title = document.getElementById('title').value; const description = document.getElementById('description').value;
+      try{ await UI.safeFetch('/api/tasks', { method:'POST', headers:{...authHeaders(), 'Content-Type':'application/json'}, body: JSON.stringify({ title, description }) }); document.getElementById('title').value=''; document.getElementById('description').value=''; loadTasks(); }catch(err){ alert(err.message||'خطأ'); }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', ()=>{ localStorage.removeItem('token'); location.href='/login.html'; });
+
+    loadTasks();
+  </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Register - Node Army</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <main class="container">
+    <div class="center">
+      <h2>إنشاء حساب</h2>
+      <form id="registerForm">
+        <input type="text" id="name" placeholder="الاسم" required>
+        <input type="email" id="email" placeholder="البريد الإلكتروني" required>
+        <input type="password" id="password" placeholder="كلمة المرور" required>
+        <button type="submit">تسجيل</button>
+      </form>
+      <p class="small">هل لديك حساب؟ <a href="/login.html">سجل الدخول</a></p>
+    </div>
+  </main>
+  <script src="/js/main.js"></script>
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try{
+        const data = await UI.safeFetch('/api/users/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, email, password })});
+        localStorage.setItem('token', data.token);
+        location.href = '/tasks.html';
+      }catch(err){
+        UI.showMessage(err.message||'Register failed','error');
+        alert(err.message||'خطأ في التسجيل');
+      }
+    });
+  </script>
+</body>
+</html>
