@@ -2,7 +2,7 @@
 
 # Task Manager
 
-ل
+An advanced backend system for managing tasks, users, and notifications, built with Node.js, Express, and MongoDB. This project supports secure authentication, real-time updates, and robust RESTful APIs, making it ideal for modern productivity applications.
 
 ## Features
 
